@@ -50,7 +50,7 @@ end
 desc "Java memcached client"
 define "spymemcached" do
 
-  test.options[:java_args] = "-ea"
+  test.options[:java_args] = "-ea"#, "-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,address=8000"
   test.include "*Test"
   TREE_VER=tree_version
   puts "Tree version is #{TREE_VER}"
