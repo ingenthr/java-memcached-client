@@ -206,7 +206,7 @@ public class MemcachedClient extends SpyThread
                     .setProtocol(ConnectionFactoryBuilder.Protocol.BINARY)
                     .setHashAlg(HashAlgorithm.KETAMA_HASH)
                     .setLocatorType(ConnectionFactoryBuilder.Locator.VBUCKET)
-                    .setVBucketConfig(bucket.getVbuckets());
+                    .setVBucketConfig(bucket.getConfig());
         } else {
             cfb.setFailureMode(FailureMode.Retry)
                     .setProtocol(ConnectionFactoryBuilder.Protocol.BINARY)
