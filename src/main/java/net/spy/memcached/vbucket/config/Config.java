@@ -4,10 +4,6 @@ import net.spy.memcached.HashAlgorithm;
 
 import java.util.List;
 
-/**
- * @author alexander.sokolovsky.a@gmail.com
- */
-
 public interface Config {
 
     // Config access
@@ -42,5 +38,6 @@ public interface Config {
 
     List<VBucket> getVbuckets();
 
+    ConfigType getConfigType();
 
 }
