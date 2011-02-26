@@ -221,16 +221,14 @@ public class ConfigurationProviderHTTP implements ConfigurationProvider {
         if (!resource.isAbsolute() && base != null) {
             resource = base.resolve(resource);
         }
-        if (restUsr != null) {
-            Authenticator.setDefault(new PoolAuthenticator(this.restUsr, this.restPwd));
-        } else {
-            Authenticator.setDefault(null);
-        }
         URL specURL = resource.toURL();
         URLConnection connection = specURL.openConnection();
         connection.setRequestProperty("Accept", "application/json");
         connection.setRequestProperty("user-agent", "spymemcached vbucket client");
         connection.setRequestProperty("X-memcachekv-Store-Client-Specification-Version", CLIENT_SPEC_VER);
+	if (restUsr != null) {
+	    connection.setRequestProperty("Authorization", buildAuthHeader(restUsr, restPwd));
+	}
 
         return connection;
 
