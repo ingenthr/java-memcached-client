@@ -6,7 +6,7 @@ VERSION_NUMBER = `git describe`.strip
 NEXT_VERSION = VERSION_NUMBER
 # Group identifier for your projects
 GROUP = "spy"
-COPYRIGHT = "2006-2009  Dustin Sallings"
+COPYRIGHT = "2006-2011  Dustin Sallings, Matt Ingenthron"
 
 MAVEN_1_RELEASE = true
 RELEASE_REPO = 'http://bleu.west.spy.net/~dustin/repo'
@@ -52,7 +52,7 @@ desc "Java memcached client"
 define "memcached" do
 
   test.options[:java_args] = "-ea"#, "-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,address=8000"
-  test.include "*Test"
+  test.include "*CacheTopologyTest"
   TREE_VER=tree_version
   puts "Tree version is #{TREE_VER}"
 
@@ -62,7 +62,8 @@ define "memcached" do
   manifest["Implementation-Vendor"] = COPYRIGHT
   compile.with "log4j:log4j:jar:1.2.15", "jmock:jmock:jar:1.2.0",
                "junit:junit:jar:4.4", "org.jboss.netty:netty:jar:3.1.5.GA",
-               "org.codehaus.jettison:jettison:jar:1.1", "commons-codec:commons-codec:jar:1.4"
+               "org.codehaus.jettison:jettison:jar:1.1", "commons-codec:commons-codec:jar:1.4", 
+               "org.membase.JMembase:JMembase:jar:1.0-SNAPSHOT"
 
   # Gen build
   gen_build_info "net.spy.memcached", "git"
