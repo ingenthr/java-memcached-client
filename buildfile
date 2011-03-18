@@ -51,7 +51,7 @@ desc "Java memcached client"
 define "spymemcached" do
 
   test.options[:java_args] = "-ea"#, "-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,address=8000"
-  test.include "*Test"
+  test.include "*CacheTopologyTest"
   TREE_VER=tree_version
   puts "Tree version is #{TREE_VER}"
 
@@ -64,7 +64,8 @@ define "spymemcached" do
                "junit:junit:jar:4.4", "org.jboss.netty:netty:jar:3.1.5.GA",
                "org.codehaus.jettison:jettison:jar:1.1",
                "commons-codec:commons-codec:jar:1.4",
-               "org.springframework:spring-beans:jar:3.0.3.RELEASE"
+               "org.springframework:spring-beans:jar:3.0.3.RELEASE",
+               "org.membase.JMembase:JMembase:jar:1.0-SNAPSHOT"
 
   # Gen build
   gen_build_info "net.spy.memcached", "git"
