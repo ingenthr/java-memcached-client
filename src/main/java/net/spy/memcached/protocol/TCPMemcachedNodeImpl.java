@@ -158,6 +158,8 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject
 			Operation o=getCurrentWriteOp();
                         if (o != null && (o.isCancelled())) {
                             getLogger().debug("Not writing cancelled op.");
+			    Operation cancelledOp = removeCurrentWriteOp();
+			    assert o == cancelledOp;
                             return;
                         }
 			if (o != null && o.isTimedOut(defaultOpTimeout)) {
