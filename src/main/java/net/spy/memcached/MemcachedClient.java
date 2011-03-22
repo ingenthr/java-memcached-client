@@ -126,8 +126,8 @@ public class MemcachedClient extends SpyThread
 	final AuthDescriptor authDescriptor;
 
 	private final AuthThreadMonitor authMonitor = new AuthThreadMonitor();
-    private volatile boolean reconfiguring = false;
-    private ConfigurationProvider configurationProvider;
+	private volatile boolean reconfiguring = false;
+	private ConfigurationProvider configurationProvider;
 
 	/**
 	 * Get a memcache client operating on the specified memcached locations.

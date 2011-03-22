@@ -74,7 +74,7 @@ public final class MemcachedConnection extends SpyObject implements Reconfigurab
 	private final OperationFactory opFact;
 	private final int timeoutExceptionThreshold;
         private final Collection<Operation> retryOps;
-    private final ConcurrentLinkedQueue<MemcachedNode> nodesToShutdown;
+	private final ConcurrentLinkedQueue<MemcachedNode> nodesToShutdown;
 
 	/**
 	 * Construct a memcached connection.
@@ -188,8 +188,6 @@ public final class MemcachedConnection extends SpyObject implements Reconfigurab
             mergedNodes.addAll(newNodes);
 
             // call update locator with new nodes list and vbucket config
-//            ((VBucketNodeLocator) this.locator).updateLocator(mergedNodes, bucket.getConfig());
-
 	    this.locator.updateLocator(mergedNodes, bucket.getConfig());
 
             // schedule shutdown for the oddNodes
@@ -303,28 +301,28 @@ public final class MemcachedConnection extends SpyObject implements Reconfigurab
 		if(!shutDown && !reconnectQueue.isEmpty()) {
 			attemptReconnects();
 		}
-        // rehash operations that in retry state
-        redistributeOperations(retryOps);
-        retryOps.clear();
+		// rehash operations that in retry state
+		redistributeOperations(retryOps);
+		retryOps.clear();
 
-        // try to shutdown odd nodes
-        for (MemcachedNode qa : nodesToShutdown) {
-            if (!addedQueue.contains(qa)) {
-                nodesToShutdown.remove(qa);
-                Collection<Operation> notCompletedOperations = qa.destroyInputQueue();
-                if (qa.getChannel() != null) {
-                    qa.getChannel().close();
-                    qa.setSk(null);
-                    if (qa.getBytesRemainingToWrite() > 0) {
-                        getLogger().warn(
-                                "Shut down with %d bytes remaining to write",
-                                qa.getBytesRemainingToWrite());
-                    }
-                    getLogger().debug("Shut down channel %s", qa.getChannel());
-                }
-                redistributeOperations(notCompletedOperations);
-            }
-        }
+		// try to shutdown odd nodes
+		for (MemcachedNode qa : nodesToShutdown) {
+		    if (!addedQueue.contains(qa)) {
+			nodesToShutdown.remove(qa);
+			Collection<Operation> incompleteOperations = qa.destroyInputQueue();
+			if (qa.getChannel() != null) {
+			    qa.getChannel().close();
+			    qa.setSk(null);
+			    if (qa.getBytesRemainingToWrite() > 0) {
+				getLogger().warn(
+					"Shut down with %d bytes remaining to write",
+					qa.getBytesRemainingToWrite());
+			    }
+			    getLogger().debug("Shut down channel %s", qa.getChannel());
+			}
+			redistributeOperations(incompleteOperations);
+		    }
+		}
 	}
 
 	// Handle any requests that have been made against the client.
