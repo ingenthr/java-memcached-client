@@ -135,74 +135,71 @@ public final class MemcachedConnection extends SpyObject implements Reconfigurab
 			connections.add(qa);
 		}
         return connections;
-    }
+	}
 
-    public void reconfigure(Bucket bucket) {
-        try {
+	public void reconfigure(Bucket bucket) {
+		try {
+			// get a new collection of addresses from the received config
+			getLogger().debug("Updating list of nodes for this client.");
+			List<String> servers = bucket.getConfig().getServers();
+			Collection<SocketAddress> newServerAddresses = new HashSet<SocketAddress>();
+			List<InetSocketAddress> newServers = new ArrayList<InetSocketAddress>();
+			for (String server : servers) {
+				int finalColon = server.lastIndexOf(':');
+				if (finalColon < 1) {
+					throw new IllegalArgumentException("Invalid server ``"
+						+ server + "'' in vbucket's server list");
+				}
+				String hostPart = server.substring(0, finalColon);
+				String portNum = server.substring(finalColon + 1);
 
-            // get a new collection of addresses from the received config
-	    getLogger().debug("Updating list of nodes for this client.");
-            List<String> servers = bucket.getConfig().getServers();
-            Collection<SocketAddress> newServerAddresses = new HashSet<SocketAddress>();
-            List<InetSocketAddress> newServers = new ArrayList<InetSocketAddress>();
-            for (String server : servers) {
-                int finalColon = server.lastIndexOf(':');
-                if (finalColon < 1) {
-                    throw new IllegalArgumentException("Invalid server ``"
-                            + server + "'' in vbucket's server list");
+				InetSocketAddress address = new InetSocketAddress(hostPart,
+					Integer.parseInt(portNum));
+				// add parsed address to our collections
+				newServerAddresses.add(address);
+				newServers.add(address);
+			}
 
-                }
-                String hostPart = server.substring(0, finalColon);
-                String portNum = server.substring(finalColon + 1);
+			// split current nodes to "odd nodes" and "stay nodes"
+			Collection<MemcachedNode> oddNodes = new ArrayList<MemcachedNode>();
+			Collection<MemcachedNode> stayNodes = new ArrayList<MemcachedNode>();
+			Collection<InetSocketAddress> stayServers = new ArrayList<InetSocketAddress>();
+			for (MemcachedNode current : this.locator.getAll()) {
+				if (newServerAddresses.contains(current.getSocketAddress())) {
+					stayNodes.add(current);
+					stayServers.add((InetSocketAddress) current.getSocketAddress());
+				} else {
+					oddNodes.add(current);
+				}
+			}
 
-                InetSocketAddress address = new InetSocketAddress(hostPart,
-                        Integer.parseInt(portNum));
-                // add parsed address to our collections
-                newServerAddresses.add(address);
-                newServers.add(address);
+			// prepare a collection of addresses for new nodes
+			newServers.removeAll(stayServers);
 
-            }
+			// create a collection of new nodes
+			List<MemcachedNode> newNodes = createConnections(newServers);
 
-            // split current nodes to "odd nodes" and "stay nodes"
-            Collection<MemcachedNode> oddNodes = new ArrayList<MemcachedNode>();
-            Collection<MemcachedNode> stayNodes = new ArrayList<MemcachedNode>();
-            Collection<InetSocketAddress> stayServers = new ArrayList<InetSocketAddress>();
-            for (MemcachedNode current : this.locator.getAll()) {
-                if (newServerAddresses.contains(current.getSocketAddress())) {
-                    stayNodes.add(current);
-                    stayServers.add((InetSocketAddress) current.getSocketAddress());
-                } else {
-                    oddNodes.add(current);
-                }
-            }
+			// merge staying nodes with new nodes
+			List<MemcachedNode> mergedNodes = new ArrayList<MemcachedNode>();
+			mergedNodes.addAll(stayNodes);
+			mergedNodes.addAll(newNodes);
 
-            // prepare a collection of addresses for new nodes
-            newServers.removeAll(stayServers);
+			// call update locator with new nodes list and vbucket config
+			this.locator.updateLocator(mergedNodes, bucket.getConfig());
 
-            // create a collection of new nodes
-            List<MemcachedNode> newNodes = createConnections(newServers);
+			// schedule shutdown for the oddNodes
+			nodesToShutdown.addAll(oddNodes);
 
-            // merge staying nodes with new nodes
-            List<MemcachedNode> mergedNodes = new ArrayList<MemcachedNode>();
-            mergedNodes.addAll(stayNodes);
-            mergedNodes.addAll(newNodes);
-
-            // call update locator with new nodes list and vbucket config
-	    this.locator.updateLocator(mergedNodes, bucket.getConfig());
-
-            // schedule shutdown for the oddNodes
-            nodesToShutdown.addAll(oddNodes);
-
-	    getLogger().debug("Completed update of nodes.");
-	    for (MemcachedNode currentNode : mergedNodes) {
-		getLogger().debug("Current node: %s", currentNode);
-	    }
-	    for (MemcachedNode removeNode: oddNodes) {
-		getLogger().debug("Removing node %s", removeNode);
-	    }
-        } catch (IOException e) {
-            getLogger().error("Connection reconfiguration failed", e);
-        }
+			getLogger().debug("Completed update of nodes.");
+			for (MemcachedNode currentNode : mergedNodes) {
+				getLogger().debug("Current node: %s", currentNode);
+			}
+			for (MemcachedNode removeNode: oddNodes) {
+				getLogger().debug("Removing node %s", removeNode);
+			}
+		} catch (IOException e) {
+			getLogger().error("Connection reconfiguration failed", e);
+		}
 	}
 
 	private boolean selectorsMakeSense() {
