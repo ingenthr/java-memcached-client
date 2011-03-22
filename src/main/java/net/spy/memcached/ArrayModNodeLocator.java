@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import net.spy.memcached.vbucket.config.Config;
 
 /**
  * NodeLocator implementation for dealing with simple array lookups using a
@@ -61,6 +62,10 @@ public final class ArrayModNodeLocator implements NodeLocator {
 			: "Invalid server number " + rv + " for key " + key;
 		return rv;
 	}
+
+    public void updateLocator(List<MemcachedNode> nodes, Config config) {
+	throw new UnsupportedOperationException("ArrayModNodeLocator does not support reconfiguration.");
+    }
 
 	class NodeIterator implements Iterator<MemcachedNode> {
 

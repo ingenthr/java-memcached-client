@@ -121,7 +121,7 @@ class MemcacheService
         Future<Object> f = client.asyncGet(key);
         try
         {
-            result = f.get(500, TimeUnit.MILLISECONDS);
+            result = f.get(1500, TimeUnit.MILLISECONDS);
         }
         catch (Exception e)
         {

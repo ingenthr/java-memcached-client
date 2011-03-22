@@ -139,11 +139,9 @@ public final class MemcachedConnection extends SpyObject implements Reconfigurab
 
     public void reconfigure(Bucket bucket) {
         try {
-            if (!(this.locator instanceof VBucketNodeLocator)) {
-                return;
-            }
 
             // get a new collection of addresses from the received config
+	    getLogger().debug("Updating list of nodes for this client.");
             List<String> servers = bucket.getConfig().getServers();
             Collection<SocketAddress> newServerAddresses = new HashSet<SocketAddress>();
             List<InetSocketAddress> newServers = new ArrayList<InetSocketAddress>();
@@ -184,16 +182,26 @@ public final class MemcachedConnection extends SpyObject implements Reconfigurab
             // create a collection of new nodes
             List<MemcachedNode> newNodes = createConnections(newServers);
 
-            // merge stay nodes with new nodes
+            // merge staying nodes with new nodes
             List<MemcachedNode> mergedNodes = new ArrayList<MemcachedNode>();
             mergedNodes.addAll(stayNodes);
             mergedNodes.addAll(newNodes);
 
             // call update locator with new nodes list and vbucket config
-            ((VBucketNodeLocator) this.locator).updateLocator(mergedNodes, bucket.getConfig());
+//            ((VBucketNodeLocator) this.locator).updateLocator(mergedNodes, bucket.getConfig());
+
+	    this.locator.updateLocator(mergedNodes, bucket.getConfig());
 
             // schedule shutdown for the oddNodes
             nodesToShutdown.addAll(oddNodes);
+
+	    getLogger().debug("Completed update of nodes.");
+	    for (MemcachedNode currentNode : mergedNodes) {
+		getLogger().debug("Current node: %s", currentNode);
+	    }
+	    for (MemcachedNode removeNode: oddNodes) {
+		getLogger().debug("Removing node %s", removeNode);
+	    }
         } catch (IOException e) {
             getLogger().error("Connection reconfiguration failed", e);
         }
