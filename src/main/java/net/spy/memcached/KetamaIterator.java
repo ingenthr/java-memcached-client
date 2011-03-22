@@ -4,22 +4,19 @@ import java.util.Iterator;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-/**
- *
- * @author ingenthr
- */
 class KetamaIterator implements Iterator<MemcachedNode> {
 
     final String key;
     long hashVal;
     int remainingTries;
     int numTries = 0;
-    HashAlgorithm hashAlg;
-    TreeMap<Long, MemcachedNode> ketamaNodes;
+    final HashAlgorithm hashAlg;
+    final TreeMap<Long, MemcachedNode> ketamaNodes;
 
-    public KetamaIterator(final String k, final int t, TreeMap<Long, MemcachedNode> ketamaNodes) {
+    public KetamaIterator(final String k, final int t, TreeMap<Long, MemcachedNode> ketamaNodes, final HashAlgorithm hashAlg) {
 	super();
 	this.ketamaNodes = ketamaNodes;
+	this.hashAlg = hashAlg;
 	hashVal = hashAlg.hash(k);
 	remainingTries = t;
 	key = k;

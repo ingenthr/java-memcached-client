@@ -25,7 +25,7 @@ import net.spy.memcached.vbucket.config.Config;
 public final class KetamaNodeLocator extends SpyObject implements NodeLocator {
 
 
-	private TreeMap<Long, MemcachedNode> ketamaNodes;
+	private volatile TreeMap<Long, MemcachedNode> ketamaNodes;
 	final Collection<MemcachedNode> allNodes;
 
 	final HashAlgorithm hashAlg;
@@ -86,7 +86,7 @@ public final class KetamaNodeLocator extends SpyObject implements NodeLocator {
 	}
 
 	public Iterator<MemcachedNode> getSequence(String k) {
-		return new KetamaIterator(k, allNodes.size(), getKetamaNodes());
+		return new KetamaIterator(k, allNodes.size(), getKetamaNodes(), hashAlg);
 	}
 
 	public NodeLocator getReadonlyCopy() {
