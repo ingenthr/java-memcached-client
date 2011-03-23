@@ -3,8 +3,9 @@ package net.spy.memcached;
 import java.util.Iterator;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import net.spy.memcached.compat.SpyObject;
 
-class KetamaIterator implements Iterator<MemcachedNode> {
+class KetamaIterator extends SpyObject implements Iterator<MemcachedNode> {
 
     final String key;
     long hashVal;
@@ -60,6 +61,7 @@ class KetamaIterator implements Iterator<MemcachedNode> {
 	    }
 	}
 	rv = ketamaNodes.get(hash);
+	this.getLogger().debug("getNodeForKey hash %s node %s", hash, rv);
 	return rv;
     }
 }

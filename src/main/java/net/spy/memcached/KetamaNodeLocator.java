@@ -86,7 +86,7 @@ public final class KetamaNodeLocator extends SpyObject implements NodeLocator {
 	}
 
 	public Iterator<MemcachedNode> getSequence(String k) {
-		return new KetamaIterator(k, allNodes.size(), getKetamaNodes(), hashAlg);
+		return new KetamaIterator(k, 160, getKetamaNodes(), hashAlg);
 	}
 
 	public NodeLocator getReadonlyCopy() {

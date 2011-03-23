@@ -61,15 +61,16 @@ public class ConcurrentCacheBaseFailure
             {
                 try
                 {
+		    Object result;
                     String key = "mcTest" + System.currentTimeMillis();
                     String value = String.valueOf(System.currentTimeMillis());
                     long t1 = System.currentTimeMillis();
-                    memcacheService.setInKeysBucket("k" + key, value);
+//                    memcacheService.setInKeysBucket("k" + key, value);
                     long t2 = System.currentTimeMillis();
                     memcacheService.setInDefaultBucket("d" + key, value);
                     long t3 = System.currentTimeMillis();
-                    Object result = memcacheService.getFromKeysBucket("k" + key);
-                    assert(value.equals(result));
+//                    Object result = memcacheService.getFromKeysBucket("k" + key);
+//                    assert(value.equals(result));
                     long t4 = System.currentTimeMillis();
                     result = memcacheService.getFromDefaultBucket("d" + key);
                     assert(value.equals(result));
@@ -87,6 +88,7 @@ public class ConcurrentCacheBaseFailure
                 {
                     System.out.println(i + ": exception!");
 		    System.err.println(e.getLocalizedMessage());
+		    System.err.println(e.getCause());
                 }
                 finally
                 {

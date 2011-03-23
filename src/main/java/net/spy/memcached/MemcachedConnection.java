@@ -683,10 +683,13 @@ public final class MemcachedConnection extends SpyObject implements Reconfigurab
 		} else if(failureMode == FailureMode.Cancel) {
 			o.cancel();
 		} else {
+			this.getLogger().debug("Primary %s isn't available.", primary
+				);
 			// Look for another node in sequence that is ready.
 			for(Iterator<MemcachedNode> i=locator.getSequence(key);
 				placeIn == null && i.hasNext(); ) {
 				MemcachedNode n=i.next();
+				this.getLogger().debug("Iterating, going to try %s and isActive %s.", n, n.isActive());
 				if(n.isActive()) {
 					placeIn=n;
 				}
