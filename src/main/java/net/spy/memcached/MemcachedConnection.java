@@ -387,13 +387,18 @@ public class MemcachedConnection extends SpyThread {
               latch.countDown();
             }
           });
-          qa.addOp(testOp);
+                    if (qa.getWbuf().hasRemaining()) {
+            handleWrites(sk, qa);
+          }
+          testOp.setHandlingNode(qa);
+          testOp.initialize();
+          qa.insertOp(testOp);
           handleReadsAndWrites(sk, qa); // read first, then write, so twice
           handleReadsAndWrites(sk, qa);
           boolean done = latch.await(2500, TimeUnit.MILLISECONDS);
-//          if (!done || testOp.isCancelled() || testOp.hasErrored() || testOp.isTimedOut()) {
-//            throw new ConnectException("Could not send noop upon connect");
-//          }
+          if (!done || testOp.isCancelled() || testOp.hasErrored() || testOp.isTimedOut()) {
+            throw new ConnectException("Could not send noop upon connect");
+          }
 
           connected(qa);
           addedQueue.offer(qa);

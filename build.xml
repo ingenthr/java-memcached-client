@@ -246,7 +246,7 @@
         </fileset>
       <formatter type="xml"/>
       </batchtest>
-      <jvmarg line="-ea -agentlib:jdwp=transport=dt_socket,address=localhost:8000,server=y,suspend=y"/>
+      <jvmarg line="-ea -agentlib:jdwp=transport=dt_socket,address=localhost:8000,server=y,suspend=n"/>
       <!-- jvmarg value="-ea" / -->
       <sysproperty key="server.address_v4" value="${server.address_v4}"/>
       <sysproperty key="server.address_v6" value="${server.address_v6}"/>
