@@ -47,13 +47,18 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import net.spy.memcached.compat.SpyThread;
 import net.spy.memcached.compat.log.LoggerFactory;
+import net.spy.memcached.internal.OperationFuture;
 import net.spy.memcached.ops.KeyedOperation;
+import net.spy.memcached.ops.NoopOperation;
 import net.spy.memcached.ops.Operation;
+import net.spy.memcached.ops.OperationCallback;
 import net.spy.memcached.ops.OperationException;
 import net.spy.memcached.ops.OperationState;
+import net.spy.memcached.ops.OperationStatus;
 import net.spy.memcached.ops.TapOperation;
 import net.spy.memcached.ops.VBucketAware;
 import net.spy.memcached.protocol.binary.BinaryOperationFactory;
@@ -368,6 +373,28 @@ public class MemcachedConnection extends SpyThread {
         getLogger().info("Connection state changed for %s", sk);
         final SocketChannel channel = qa.getChannel();
         if (channel.finishConnect()) {
+
+          // Test to see if it's truly alive, could be a hung process, OS
+          final CountDownLatch latch = new CountDownLatch(1);
+          final OperationFuture<Boolean> rv =
+            new OperationFuture<Boolean>("", latch, 2500);  //TODO: follow default op timeout
+          NoopOperation testOp = opFact.noop(new OperationCallback() {
+            public void receivedStatus(OperationStatus status) {
+              rv.set(status.isSuccess(), status);
+            }
+
+            public void complete() {
+              latch.countDown();
+            }
+          });
+          qa.addOp(testOp);
+          handleReadsAndWrites(sk, qa); // read first, then write, so twice
+          handleReadsAndWrites(sk, qa);
+          boolean done = latch.await(2500, TimeUnit.MILLISECONDS);
+//          if (!done || testOp.isCancelled() || testOp.hasErrored() || testOp.isTimedOut()) {
+//            throw new ConnectException("Could not send noop upon connect");
+//          }
+
           connected(qa);
           addedQueue.offer(qa);
           if (qa.getWbuf().hasRemaining()) {
@@ -377,12 +404,7 @@ public class MemcachedConnection extends SpyThread {
           assert !channel.isConnected() : "connected";
         }
       } else {
-        if (sk.isValid() && sk.isReadable()) {
-          handleReads(sk, qa);
-        }
-        if (sk.isValid() && sk.isWritable()) {
-          handleWrites(sk, qa);
-        }
+        handleReadsAndWrites(sk, qa);
       }
     } catch (ClosedChannelException e) {
       // Note, not all channel closes end up here
@@ -855,6 +877,15 @@ public class MemcachedConnection extends SpyThread {
       getLogger().debug("Exception occurred during shutdown", e);
     } else {
       getLogger().warn("Problem handling memcached IO", e);
+    }
+  }
+
+  private void handleReadsAndWrites(SelectionKey sk, MemcachedNode qa) throws IOException {
+    if (sk.isValid() && sk.isReadable()) {
+      handleReads(sk, qa);
+    }
+    if (sk.isValid() && sk.isWritable()) {
+      handleWrites(sk, qa);
     }
   }
 }
